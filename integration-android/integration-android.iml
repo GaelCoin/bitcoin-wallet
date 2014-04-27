@@ -3,8 +3,14 @@
   <component name="FacetManager">
     <facet type="android" name="Android">
       <configuration>
+        <option name="GEN_FOLDER_RELATIVE_PATH_APT" value="/target/generated-sources/r" />
+        <option name="GEN_FOLDER_RELATIVE_PATH_AIDL" value="/target/generated-sources/aidl" />
+        <option name="CUSTOM_APK_RESOURCE_FOLDER" value="/target/generated-sources/combined-resources/res" />
+        <option name="APK_PATH" value="/target/integration-android.apk" />
         <option name="LIBRARY_PROJECT" value="true" />
+        <option name="RUN_PROCESS_RESOURCES_MAVEN_TASK" value="false" />
         <option name="COMPILE_CUSTOM_GENERATED_SOURCES" value="false" />
+        <includeAssetsFromLibraries>true</includeAssetsFromLibraries>
         <resOverlayFolders>
           <path>/res-overlay</path>
         </resOverlayFolders>
@@ -15,9 +21,9 @@
     <output url="file://$MODULE_DIR$/target/classes" />
     <output-test url="file://$MODULE_DIR$/target/test-classes" />
     <content url="file://$MODULE_DIR$">
-      <sourceFolder url="file://$MODULE_DIR$/gen" isTestSource="false" generated="true" />
       <sourceFolder url="file://$MODULE_DIR$/src" isTestSource="false" />
-      <excludeFolder url="file://$MODULE_DIR$/target" />
+      <sourceFolder url="file://$MODULE_DIR$/target/generated-sources/r" isTestSource="false" generated="true" />
+      <excludeFolder url="file://$MODULE_DIR$/target/classes" />
     </content>
     <orderEntry type="jdk" jdkName="Maven Android API 10 Platform" jdkType="Android SDK" />
     <orderEntry type="sourceFolder" forTests="false" />

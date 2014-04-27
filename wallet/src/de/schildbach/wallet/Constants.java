@@ -64,7 +64,7 @@ public class Constants
 
 	public static final int MAX_NUM_CONFIRMATIONS = 7;
 	public static final String USER_AGENT = "Gaelcoin Wallet";
-	public static final String DEFAULT_EXCHANGE_CURRENCY = "USD";
+	public static final String DEFAULT_EXCHANGE_CURRENCY = "EUR";
 	public static final int WALLET_OPERATION_STACK_SIZE = 256 * 1024;
 	public static final long BLOCKCHAIN_STATE_BROADCAST_THROTTLE_MS = DateUtils.SECOND_IN_MILLIS;
 	public static final long BLOCKCHAIN_UPTODATE_THRESHOLD_MS = DateUtils.HOUR_IN_MILLIS;
@@ -88,20 +88,20 @@ public class Constants
 	public static final int MBTC_MAX_PRECISION = 5;
 	public static final int LOCAL_PRECISION = 4;
 
-	public static final String DONATION_ADDRESS = "LPwViUHsXXKWp65ZxVqag7B3wmbmo4Zfd2";
-	public static final String REPORT_EMAIL = "dev@litecoin.org";
+	public static final String DONATION_ADDRESS = "7FDGzvsqh21Dhs6taKTwiD63Sfn8VjMA6B";
+	public static final String REPORT_EMAIL = "info@Gaelcoin.org";
 	public static final String REPORT_SUBJECT_ISSUE = "Reported issue";
 	public static final String REPORT_SUBJECT_CRASH = "Crash report";
 
     //TODO: Lots of these
 	public static final String LICENSE_URL = "http://www.gnu.org/licenses/gpl-3.0.txt";
-	public static final String SOURCE_URL = "https://github.com/Litecoin-Java/bitcoin-wallet";
-	public static final String BINARY_URL = "https://github.com/Litecoin-Java/bitcoin-wallet/releases";
-	public static final String CREDITS_BITCOINJ_URL = "https://github.com/Litecoin-Java/bitcoinj";
+	public static final String SOURCE_URL = "https://github.com/Gaelcoin/bitcoin-wallet";
+	public static final String BINARY_URL = "https://github.com/Gaelcoin/bitcoin-wallet/releases";
+	public static final String CREDITS_BITCOINJ_URL = "https://github.com/Gaelcoin/bitcoinj";
 	public static final String CREDITS_ZXING_URL = "http://code.google.com/p/zxing/";
-	public static final String AUTHOR_TWITTER_URL = "https://twitter.com/LitecoinProject";
-	public static final String AUTHOR_GOOGLEPLUS_URL = "https://plus.google.com/+LitecoinOrg";
-	public static final String COMMUNITY_GOOGLEPLUS_URL = "https://plus.google.com/+LitecoinOrg";
+	public static final String AUTHOR_TWITTER_URL = "https://twitter.com/Gaelcoin";
+	public static final String AUTHOR_GOOGLEPLUS_URL = "https://plus.google.com/+Gaelcoin";
+	public static final String COMMUNITY_GOOGLEPLUS_URL = "https://plus.google.com/+Gaelcoin";
     public static final String ANDROID_MARKET_APP_URL = "market://details?id=%s";
     public static final String BB_MARKET_APP_URL = "http://appworld.blackberry.com/webstore/content/46329888";
     public static final String ANDROID_WEBMARKET_APP_URL = "https://play.google.com/store/apps/details?id=%s";

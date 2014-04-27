@@ -237,258 +237,266 @@ public class BlockchainServiceImpl extends android.app.Service implements Blockc
 		nm.notify(NOTIFICATION_ID_COINS_RECEIVED, notification.getNotification());
 	}
 
-	private final class PeerConnectivityListener extends AbstractPeerEventListener implements OnSharedPreferenceChangeListener
-	{
-		private int peerCount;
-		private AtomicBoolean stopped = new AtomicBoolean(false);
+    private final class PeerConnectivityListener extends AbstractPeerEventListener implements OnSharedPreferenceChangeListener
+    {
+        private int peerCount;
+        private AtomicBoolean stopped = new AtomicBoolean(false);
 
-		public PeerConnectivityListener()
-		{
-			prefs.registerOnSharedPreferenceChangeListener(this);
-		}
+        public PeerConnectivityListener()
+        {
+            prefs.registerOnSharedPreferenceChangeListener(this);
+        }
 
-		public void stop()
-		{
-			stopped.set(true);
+        public void stop()
+        {
+            stopped.set(true);
 
-			prefs.unregisterOnSharedPreferenceChangeListener(this);
+            prefs.unregisterOnSharedPreferenceChangeListener(this);
 
-			nm.cancel(NOTIFICATION_ID_CONNECTED);
-		}
+            nm.cancel(NOTIFICATION_ID_CONNECTED);
+        }
 
-		@Override
-		public void onPeerConnected(final Peer peer, final int peerCount)
-		{
-			this.peerCount = peerCount;
-			changed(peerCount);
-		}
+        @Override
+        public void onPeerConnected(final Peer peer, final int peerCount)
+        {
+            this.peerCount = peerCount;
+            changed(peerCount);
+        }
 
-		@Override
-		public void onPeerDisconnected(final Peer peer, final int peerCount)
-		{
-			this.peerCount = peerCount;
-			changed(peerCount);
-		}
+        @Override
+        public void onPeerDisconnected(final Peer peer, final int peerCount)
+        {
+            this.peerCount = peerCount;
+            changed(peerCount);
+        }
 
-		@Override
-		public void onSharedPreferenceChanged(final SharedPreferences sharedPreferences, final String key)
-		{
-			if (Constants.PREFS_KEY_CONNECTIVITY_NOTIFICATION.equals(key))
-				changed(peerCount);
-		}
+        @Override
+        public void onSharedPreferenceChanged(final SharedPreferences sharedPreferences, final String key)
+        {
+            if (Constants.PREFS_KEY_CONNECTIVITY_NOTIFICATION.equals(key))
+                changed(peerCount);
+        }
 
-		private void changed(final int numPeers)
-		{
-			if (stopped.get())
-				return;
+        private void changed(final int numPeers)
+        {
+            if (stopped.get())
+                return;
 
-			handler.post(new Runnable()
-			{
-				@Override
-				public void run()
-				{
-					final boolean connectivityNotification = prefs.getBoolean(Constants.PREFS_KEY_CONNECTIVITY_NOTIFICATION, false);
+            handler.post(new Runnable()
+            {
+                @Override
+                public void run()
+                {
+                    final boolean connectivityNotification = prefs.getBoolean(Constants.PREFS_KEY_CONNECTIVITY_NOTIFICATION, false);
 
-					if (!connectivityNotification || numPeers == 0)
-					{
-						nm.cancel(NOTIFICATION_ID_CONNECTED);
-					}
-					else
-					{
-						final NotificationCompat.Builder notification = new NotificationCompat.Builder(BlockchainServiceImpl.this);
-						notification.setSmallIcon(R.drawable.stat_sys_peers, numPeers > 4 ? 4 : numPeers);
-						notification.setContentTitle(getString(R.string.app_name));
-						notification.setContentText(getString(R.string.notification_peers_connected_msg, numPeers));
-						notification.setContentIntent(PendingIntent.getActivity(BlockchainServiceImpl.this, 0, new Intent(BlockchainServiceImpl.this,
-								WalletActivity.class), 0));
-						notification.setWhen(System.currentTimeMillis());
-						notification.setOngoing(true);
-						nm.notify(NOTIFICATION_ID_CONNECTED, notification.getNotification());
-					}
+                    if (!connectivityNotification || numPeers == 0)
+                    {
+                        nm.cancel(NOTIFICATION_ID_CONNECTED);
+                    }
+                    else
+                    {
+                        final NotificationCompat.Builder notification = new NotificationCompat.Builder(BlockchainServiceImpl.this);
+                        notification.setSmallIcon(R.drawable.stat_sys_peers, numPeers > 4 ? 4 : numPeers);
+                        notification.setContentTitle(getString(R.string.app_name));
+                        notification.setContentText(getString(R.string.notification_peers_connected_msg, numPeers));
+                        notification.setContentIntent(PendingIntent.getActivity(BlockchainServiceImpl.this, 0, new Intent(BlockchainServiceImpl.this,
+                                WalletActivity.class), 0));
+                        notification.setWhen(System.currentTimeMillis());
+                        notification.setOngoing(true);
+                        nm.notify(NOTIFICATION_ID_CONNECTED, notification.getNotification());
+                    }
 
-					// send broadcast
-					sendBroadcastPeerState(numPeers);
-				}
-			});
-		}
-	}
+                    // send broadcast
+                    sendBroadcastPeerState(numPeers);
+                }
+            });
+        }
+    }
 
-	private final PeerEventListener blockchainDownloadListener = new AbstractPeerEventListener()
-	{
-		private final AtomicLong lastMessageTime = new AtomicLong(0);
+    private final PeerEventListener blockchainDownloadListener = new AbstractPeerEventListener()
+    {
+        private final AtomicLong lastMessageTime = new AtomicLong(0);
 
-		@Override
-		public void onBlocksDownloaded(final Peer peer, final Block block, final int blocksLeft)
-		{
-			bestChainHeightEver = Math.max(bestChainHeightEver, blockChain.getChainHead().getHeight());
+        @Override
+        public void onBlocksDownloaded(final Peer peer, final Block block, final int blocksLeft)
+        {
+            bestChainHeightEver = Math.max(bestChainHeightEver, blockChain.getChainHead().getHeight());
 
-			delayHandler.removeCallbacksAndMessages(null);
+            delayHandler.removeCallbacksAndMessages(null);
 
-			final long now = System.currentTimeMillis();
+            final long now = System.currentTimeMillis();
 
-			if (now - lastMessageTime.get() > Constants.BLOCKCHAIN_STATE_BROADCAST_THROTTLE_MS)
-				delayHandler.post(runnable);
-			else
-				delayHandler.postDelayed(runnable, Constants.BLOCKCHAIN_STATE_BROADCAST_THROTTLE_MS);
-		}
+            if (now - lastMessageTime.get() > Constants.BLOCKCHAIN_STATE_BROADCAST_THROTTLE_MS)
+                delayHandler.post(runnable);
+            else
+                delayHandler.postDelayed(runnable, Constants.BLOCKCHAIN_STATE_BROADCAST_THROTTLE_MS);
+        }
 
-		private final Runnable runnable = new Runnable()
-		{
-			@Override
-			public void run()
-			{
-				lastMessageTime.set(System.currentTimeMillis());
+        private final Runnable runnable = new Runnable()
+        {
+            @Override
+            public void run()
+            {
+                lastMessageTime.set(System.currentTimeMillis());
 
-				sendBroadcastBlockchainState(ACTION_BLOCKCHAIN_STATE_DOWNLOAD_OK);
-			}
-		};
-	};
+                sendBroadcastBlockchainState(ACTION_BLOCKCHAIN_STATE_DOWNLOAD_OK);
+            }
+        };
+    };
 
-	private final BroadcastReceiver connectivityReceiver = new BroadcastReceiver()
-	{
-		private boolean hasConnectivity;
-		private boolean hasStorage = true;
-        private final String TAG = BroadcastReceiver.class.getName();
+    private final BroadcastReceiver connectivityReceiver = new BroadcastReceiver()
+    {
+        private boolean hasConnectivity;
+        private boolean hasStorage = true;
 
-		@Override
-		public void onReceive(final Context context, final Intent intent)
-		{
-			final String action = intent.getAction();
+        @Override
+        public void onReceive(final Context context, final Intent intent)
+        {
+            final String action = intent.getAction();
 
-			if (ConnectivityManager.CONNECTIVITY_ACTION.equals(action))
-			{
-				hasConnectivity = !intent.getBooleanExtra(ConnectivityManager.EXTRA_NO_CONNECTIVITY, false);
-				log.info("network is " + (hasConnectivity ? "up" : "down"));
+            if (ConnectivityManager.CONNECTIVITY_ACTION.equals(action))
+            {
+                hasConnectivity = !intent.getBooleanExtra(ConnectivityManager.EXTRA_NO_CONNECTIVITY, false);
+                log.info("network is " + (hasConnectivity ? "up" : "down"));
 
-				check();
-			}
-			else if (Intent.ACTION_DEVICE_STORAGE_LOW.equals(action))
-			{
-				hasStorage = false;
-				log.info("device storage low");
+                check();
+            }
+            else if (Intent.ACTION_DEVICE_STORAGE_LOW.equals(action))
+            {
+                hasStorage = false;
+                log.info("device storage low");
 
-				check();
-			}
-			else if (Intent.ACTION_DEVICE_STORAGE_OK.equals(action))
-			{
-				hasStorage = true;
-				log.info("device storage ok");
+                check();
+            }
+            else if (Intent.ACTION_DEVICE_STORAGE_OK.equals(action))
+            {
+                hasStorage = true;
+                log.info("device storage ok");
 
-				check();
-			}
-		}
+                check();
+            }
+        }
 
-		@SuppressLint("Wakelock")
-		private void check()
-		{
-			final Wallet wallet = application.getWallet();
-			final boolean hasEverything = hasConnectivity && hasStorage;
+        @SuppressLint("Wakelock")
+        private void check()
+        {
+            final Wallet wallet = application.getWallet();
+            final boolean hasEverything = hasConnectivity && hasStorage;
 
-			if (hasEverything && peerGroup == null)
-			{
-				log.debug("acquiring wakelock");
-				wakeLock.acquire();
+            if (hasEverything && peerGroup == null)
+            {
+                log.debug("acquiring wakelock");
+                wakeLock.acquire();
 
-				// consistency check
-				final int walletLastBlockSeenHeight = wallet.getLastBlockSeenHeight();
-				final int bestChainHeight = blockChain.getBestChainHeight();
-				if (walletLastBlockSeenHeight != -1 && walletLastBlockSeenHeight != bestChainHeight)
-				{
-					final String message = "wallet/blockchain out of sync: " + walletLastBlockSeenHeight + "/" + bestChainHeight;
-					log.error(message);
-					CrashReporter.saveBackgroundTrace(new RuntimeException(message), application.packageInfo());
-				}
+                // consistency check
+                final int walletLastBlockSeenHeight = wallet.getLastBlockSeenHeight();
+                final int bestChainHeight = blockChain.getBestChainHeight();
+                if (walletLastBlockSeenHeight != -1 && walletLastBlockSeenHeight != bestChainHeight)
+                {
+                    final String message = "wallet/blockchain out of sync: " + walletLastBlockSeenHeight + "/" + bestChainHeight;
+                    log.error(message);
+                    CrashReporter.saveBackgroundTrace(new RuntimeException(message), application.packageInfo());
+                }
 
-				log.info("starting peergroup");
-				peerGroup = new PeerGroup(Constants.NETWORK_PARAMETERS, blockChain);
-				peerGroup.addWallet(wallet);
-				peerGroup.setUserAgent(Constants.USER_AGENT, application.packageInfo().versionName);
-				peerGroup.addEventListener(peerConnectivityListener);
+                log.info("starting peergroup");
+                peerGroup = new PeerGroup(Constants.NETWORK_PARAMETERS, blockChain);
+                peerGroup.addWallet(wallet);
+                peerGroup.setUserAgent(Constants.USER_AGENT, application.packageInfo().versionName);
+                peerGroup.addEventListener(peerConnectivityListener);
 
-				final int maxConnectedPeers = application.maxConnectedPeers();
+                final int maxConnectedPeers = application.maxConnectedPeers();
 
-				final String trustedPeerHost = prefs.getString(Constants.PREFS_KEY_TRUSTED_PEER, "").trim();
-				final boolean hasTrustedPeer = !trustedPeerHost.isEmpty();
+                final String trustedPeerHost = prefs.getString(Constants.PREFS_KEY_TRUSTED_PEER, "").trim();
+                final boolean hasTrustedPeer = !trustedPeerHost.isEmpty();
 
-				final boolean connectTrustedPeerOnly = hasTrustedPeer && prefs.getBoolean(Constants.PREFS_KEY_TRUSTED_PEER_ONLY, false);
-				peerGroup.setMaxConnections(connectTrustedPeerOnly ? 1 : maxConnectedPeers);
+                final boolean connectTrustedPeerOnly = hasTrustedPeer && prefs.getBoolean(Constants.PREFS_KEY_TRUSTED_PEER_ONLY, false);
+                peerGroup.setMaxConnections(connectTrustedPeerOnly ? 1 : maxConnectedPeers);
 
-				peerGroup.addPeerDiscovery(new PeerDiscovery()
-				{
-					private final PeerDiscovery normalPeerDiscovery = new DnsDiscovery(Constants.NETWORK_PARAMETERS);
-                    private PeerDiscovery dbPeerDiscovery = null;
+                peerGroup.addPeerDiscovery(new PeerDiscovery()
+                {
+                    private final PeerDiscovery normalPeerDiscovery = new DnsDiscovery(Constants.NETWORK_PARAMETERS);
 
-					@Override
-					public InetSocketAddress[] getPeers(final long timeoutValue, final TimeUnit timeoutUnit) throws PeerDiscoveryException
-					{
-                        try {
+                    //From Litecoin
+                    //private PeerDBDiscovery dbPeerDiscovery;
+
+                    @Override
+                    public InetSocketAddress[] getPeers(final long timeoutValue, final TimeUnit timeoutUnit) throws PeerDiscoveryException
+                    {
+                        //From Litecoin
+                        /*try {
                             dbPeerDiscovery = new LitcoinPeerDBDiscovery(Constants.NETWORK_PARAMETERS,
                                     getFileStreamPath("litecoin.peerdb"), peerGroup);
                         } catch(IllegalStateException e) {
                             // This can happen in the guts of bitcoinj
-                            Log.i(TAG, "IllegalStateException in bitcoinj: " + e.getMessage());
-                        }
-						final List<InetSocketAddress> peers = new LinkedList<InetSocketAddress>();
+                            log.info("IllegalStateException in bitcoinj: " + e.getMessage());
+                        }*/
+                        final List<InetSocketAddress> peers = new LinkedList<InetSocketAddress>();
 
-						boolean needsTrimPeersWorkaround = false;
+                        boolean needsTrimPeersWorkaround = false;
 
-						if (hasTrustedPeer)
-						{
-							log.info("trusted peer '" + trustedPeerHost + "'" + (connectTrustedPeerOnly ? " only" : ""));
+                        if (hasTrustedPeer)
+                        {
+                            log.info("trusted peer '" + trustedPeerHost + "'" + (connectTrustedPeerOnly ? " only" : ""));
 
-							final InetSocketAddress addr = new InetSocketAddress(trustedPeerHost, Constants.NETWORK_PARAMETERS.getPort());
-							if (addr.getAddress() != null)
-							{
-								peers.add(addr);
-								needsTrimPeersWorkaround = true;
-							}
-						}
-
-						if (!connectTrustedPeerOnly) {
-							peers.addAll(Arrays.asList(normalPeerDiscovery.getPeers(timeoutValue, timeoutUnit)));
-                            if(dbPeerDiscovery != null)
-                                peers.addAll(Arrays.asList(dbPeerDiscovery.getPeers(1, TimeUnit.SECONDS)));
+                            final InetSocketAddress addr = new InetSocketAddress(trustedPeerHost, Constants.NETWORK_PARAMETERS.getPort());
+                            if (addr.getAddress() != null)
+                            {
+                                peers.add(addr);
+                                needsTrimPeersWorkaround = true;
+                            }
                         }
 
-						// workaround because PeerGroup will shuffle peers
-						if (needsTrimPeersWorkaround)
-							while (peers.size() >= maxConnectedPeers)
-								peers.remove(peers.size() - 1);
+                        if (!connectTrustedPeerOnly)
+                        {
+                            peers.addAll(Arrays.asList(normalPeerDiscovery.getPeers(timeoutValue, timeoutUnit)));
 
-						return peers.toArray(new InetSocketAddress[0]);
-					}
+                            //SeedPeers seedPeers = new SeedPeers(Constants.NETWORK_PARAMETERS);
 
-					@Override
-					public void shutdown()
-					{
-						normalPeerDiscovery.shutdown();
-                        if(dbPeerDiscovery != null)
-                            dbPeerDiscovery.shutdown();
-					}
-				});
+                            //peers.addAll(Arrays.asList(seedPeers.getPeers2(timeoutValue, timeoutUnit)));
 
-				// start peergroup
-				peerGroup.start();
-				peerGroup.startBlockChainDownload(blockchainDownloadListener);
-			}
-			else if (!hasEverything && peerGroup != null)
-			{
-				log.info("stopping peergroup");
-				peerGroup.removeEventListener(peerConnectivityListener);
-				peerGroup.removeWallet(wallet);
-				peerGroup.stop();
-				peerGroup = null;
+                            //From Litecoin
+                            //if(dbPeerDiscovery != null)
+                            //   peers.addAll(Arrays.asList(dbPeerDiscovery.getPeers(1, TimeUnit.SECONDS)));
 
-				log.debug("releasing wakelock");
-				wakeLock.release();
-			}
+                        }
 
-			final int download = (hasConnectivity ? 0 : ACTION_BLOCKCHAIN_STATE_DOWNLOAD_NETWORK_PROBLEM)
-					| (hasStorage ? 0 : ACTION_BLOCKCHAIN_STATE_DOWNLOAD_STORAGE_PROBLEM);
+                        // workaround because PeerGroup will shuffle peers
+                        if (needsTrimPeersWorkaround)
+                            while (peers.size() >= maxConnectedPeers)
+                                peers.remove(peers.size() - 1);
 
-			sendBroadcastBlockchainState(download);
-		}
-	};
+                        return peers.toArray(new InetSocketAddress[0]);
+                    }
+
+                    @Override
+                    public void shutdown()
+                    {
+                        normalPeerDiscovery.shutdown();
+                    }
+                });
+
+                // start peergroup
+                peerGroup.start();
+                peerGroup.startBlockChainDownload(blockchainDownloadListener);
+            }
+            else if (!hasEverything && peerGroup != null)
+            {
+                log.info("stopping peergroup");
+                peerGroup.removeEventListener(peerConnectivityListener);
+                peerGroup.removeWallet(wallet);
+                peerGroup.stop();
+                peerGroup = null;
+
+                log.debug("releasing wakelock");
+                wakeLock.release();
+            }
+
+            final int download = (hasConnectivity ? 0 : ACTION_BLOCKCHAIN_STATE_DOWNLOAD_NETWORK_PROBLEM)
+                    | (hasStorage ? 0 : ACTION_BLOCKCHAIN_STATE_DOWNLOAD_STORAGE_PROBLEM);
+
+            sendBroadcastBlockchainState(download);
+        }
+    };
 
 	private final static class ActivityHistoryEntry
 	{
